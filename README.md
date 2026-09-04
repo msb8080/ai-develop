@@ -2,6 +2,8 @@
 
 面向个人学习和面试展示的 Java + AI 研发助手。项目围绕模型流式对话、上下文工程、Java 项目诊断、Agent Skills、安全工具调用与多编码 Agent 协议兼容逐步建设。
 
+GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
+
 ## 当前状态
 
 - 当前阶段：阶段 2——模型与对话
