@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: rainbow-ai-develop
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/rainbow}
+    username: ${DATABASE_USERNAME:rainbow}
+    password: ${DATABASE_PASSWORD:rainbow-local}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+server:
+  port: ${APP_PORT:8080}
+  shutdown: graceful
+
+rainbow:
+  ai:
+    chat:
+      sse-timeout: ${AI_SSE_TIMEOUT:2m}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+
+logging:
+  level:
+    root: INFO
+    dev.rainbow.aidevelop: INFO

@@ -1,0 +1,47 @@
+# 总体规划
+
+最后更新：2026-09-04
+
+## 目标
+
+用一个持续增强的主项目系统学习 Java AI 应用工程，并形成完整的面试故事线，而不是堆砌彼此割裂的 Demo。
+
+成功标准：
+
+- 具备可访问的在线演示和可在 Mac 本地运行的完整开发环境。
+- 能解释模型接入、上下文工程、Agent、Skills、MCP、沙盒、评测和协议适配的工程取舍。
+- 每个阶段至少沉淀一个有证据的技术问题与解决案例。
+- 云端在 2 核 2G 资源约束下稳定运行。
+
+## 最终产品
+
+Rainbow AI Dev Copilot 提供：
+
+1. Java 项目、会话和任务管理。
+2. 安全、可取消、可观测的模型流式对话。
+3. 按规则、项目元数据、文件片段、工具结果与历史状态组装高信噪比上下文。
+4. Java 项目结构、依赖、配置和异常日志诊断。
+5. Coordinator、Context、Code Analyst、Diagnostic、Verifier、Report 等 Agent 协作。
+6. 可发现、按需加载、可版本化的 Agent Skills。
+7. 高风险工具执行前的人工确认，以及 Mac 本地临时容器沙盒与变更 diff。
+8. 任务成功率、工具正确性、延迟、Token 和费用的可重复评测。
+9. Codex、Claude Code、OpenCode 的统一适配与效果比较。
+
+## 技术主线
+
+- 后端：Java、Spring Boot、Spring AI。
+- Agent：Spring AI Alibaba 为主，AgentScope Java 用于对比实验。
+- 数据：PostgreSQL、Flyway；保存项目、会话、消息、任务状态和审计记录。
+- 前端：React、TypeScript，构建为静态文件。
+- 评测：Python、JSONL 测试集和可重复运行的报告。
+- 部署：Docker Compose、Caddy、HTTPS、备份和资源限制。
+
+## 范围边界
+
+第一版不包含 RAG、Embedding、向量数据库、多人协作、商业计费、Kubernetes、微服务、Kafka、公开的不可信代码执行或大模型云端自托管。只有真实任务证明关键词、结构化元数据和按需文件读取不足时，才重新评估检索层。实验性组件默认只在 Mac 运行。
+
+## 工作方式
+
+- 周末为主要工作时段，每周预计 5–8 小时。
+- 工作日只安排非强制的阅读、数据准备与记录。
+- 阶段以验收条件驱动；目标日期可以顺延，但不跳过验证。
