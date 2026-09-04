@@ -13,7 +13,7 @@
 ## 任务
 
 - [ ] 定义 `CodingAgentAdapter`、能力探测和统一事件。
-- [ ] 建立 Rainbow MCP Server。
+- [x] 建立 Rainbow 只读 MCP Server 第一版（默认关闭，仅本地显式启用）。
 - [ ] 分别实现 Codex、Claude Code、OpenCode 适配器。
 - [ ] 映射会话、取消、恢复、权限审批和 diff。
 - [ ] 用同一 Java 故障任务生成三客户端比较报告。
@@ -29,4 +29,4 @@
 
 ## 实施记录
 
-尚未开始。
+- 2026-09-04：使用 Spring AI Streamable HTTP 暴露 `listSkills` 与 `readProjectSnapshot`，复用工作区安全边界。客户端适配和比较报告仍未开始。

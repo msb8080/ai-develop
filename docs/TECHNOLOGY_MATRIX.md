@@ -26,6 +26,8 @@
 | Spring Boot | 3.5.16 | 与稳定版 Java AI 技术栈兼容 |
 | Spring AI | 1.1.2 | 与 Spring AI Alibaba 稳定版对齐 |
 | Spring AI Alibaba | 1.1.2.2 | 当前稳定 Agent 框架基线 |
+| React / Vite | React 19 / Vite 8 | 本地工作台与静态构建 |
+| PostgreSQL | 16 | 标准镜像，不安装 vector 扩展 |
 
 ## 选型原则
 
@@ -37,8 +39,8 @@
 
 ## 待决策
 
-- 模型 API、额度和降级策略。
-- React 构建工具及组件库。
+- xtoken 已用于本地开发并验证 `gpt-5.4`；DeepSeek 保留为 OpenAI-compatible 环境变量配置。月度额度与生产降级策略待决策。
+- 前端采用 React + TypeScript + Vite，不引入组件库。
 - 云主机 Linux 发行版和备份目标。
 
 ## 明确移出主线

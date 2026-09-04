@@ -35,6 +35,11 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.SERVICE_UNAVAILABLE, "AI_NOT_CONFIGURED", exception.getMessage(), List.of());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ApiError> handleInvalidArgument(IllegalArgumentException exception) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", exception.getMessage(), List.of());
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiError> handleUnexpected(Exception exception, HttpServletRequest request) {
         return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",

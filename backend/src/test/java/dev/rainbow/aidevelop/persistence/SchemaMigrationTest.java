@@ -35,9 +35,11 @@ class SchemaMigrationTest {
 
     @Test
     void createsOnlyTheProjectConversationSchema() {
-        assertThat(tableNames()).contains("projects", "conversations", "messages");
+        assertThat(tableNames()).contains("projects", "conversations", "messages", "agent_runs", "agent_events");
         assertThat(tableNames()).doesNotContain("knowledge_bases", "documents");
         assertThat(vectorExtensionCount()).isZero();
+        assertThat(columnNames("conversations")).contains("updated_at");
+        assertThat(columnNames("messages")).contains("request_id", "metadata_json");
     }
 
     private java.util.List<String> tableNames() {
@@ -54,5 +56,13 @@ class SchemaMigrationTest {
                 Integer.class
         );
         return count == null ? 0 : count;
+    }
+
+    private java.util.List<String> columnNames(String table) {
+        return jdbcTemplate.queryForList("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = ?
+                """, String.class, table);
     }
 }

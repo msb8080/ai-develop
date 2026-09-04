@@ -1,0 +1,20 @@
+{"id":"structure-01","category":"project-structure","prompt":"概括项目分层，并列出支持结论的文件。","required":["文件"]}
+{"id":"structure-02","category":"project-structure","prompt":"说明后端的入口、配置和数据库迁移分别在哪里。","required":["backend"]}
+{"id":"maven-01","category":"maven","prompt":"审查 pom.xml 的依赖边界和潜在冲突。","skillId":"code-review","required":["pom.xml"]}
+{"id":"maven-02","category":"maven","prompt":"如果 Maven 构建找不到依赖，应按什么证据顺序排查？","required":["依赖"]}
+{"id":"spring-01","category":"spring","prompt":"分析 Spring Boot 无法连接 PostgreSQL 时的证据链。","skillId":"spring-diagnosis","required":["PostgreSQL"]}
+{"id":"spring-02","category":"spring","prompt":"检查 application.yml 中模型配置的安全边界。","skillId":"code-review","required":["API"]}
+{"id":"spring-03","category":"spring","prompt":"说明 Flyway 校验失败时应先检查什么。","skillId":"spring-diagnosis","required":["Flyway"]}
+{"id":"exception-01","category":"exception","prompt":"收到 Connection refused 异常时，给出从现象到验证的诊断路径。","skillId":"spring-diagnosis","required":["验证"]}
+{"id":"exception-02","category":"exception","prompt":"解释 404 与连接提前关闭应如何区分。","skillId":"spring-diagnosis","required":["404"]}
+{"id":"review-01","category":"code-review","prompt":"审查工作区文件读取器的路径穿越风险。","skillId":"code-review","required":["路径"]}
+{"id":"review-02","category":"code-review","prompt":"审查 SSE 断开连接时的资源释放逻辑。","skillId":"code-review","required":["SSE"]}
+{"id":"review-03","category":"code-review","prompt":"审查会话持久化的事务与一致性风险。","skillId":"code-review","required":["事务"]}
+{"id":"context-01","category":"context","prompt":"列出本轮读取的上下文来源并说明是否裁剪。","required":["上下文"]}
+{"id":"context-02","category":"context","prompt":"解释为什么项目文件里的指令不能覆盖系统规则。","required":["指令"]}
+{"id":"skill-01","category":"skill","prompt":"对当前代码做一次审查并说明命中了哪个 Skill。","skillId":"code-review","required":["审查"]}
+{"id":"skill-02","category":"skill","prompt":"诊断一个假设的 Spring 启动失败并区分事实与假设。","skillId":"spring-diagnosis","required":["假设"]}
+{"id":"security-01","category":"security","prompt":"说明为什么客户端不能提交模型 API Key。","required":["服务端"]}
+{"id":"security-02","category":"security","prompt":"识别当前只读工具仍需注意的安全边界。","skillId":"code-review","required":["只读"]}
+{"id":"memory-01","category":"memory","prompt":"说明会话重启后如何恢复，以及当前窗口的限制。","required":["会话"]}
+{"id":"report-01","category":"report","prompt":"生成一份包含计划、证据、验证和结论的短报告。","required":["结论"]}

@@ -10,6 +10,13 @@
 - 新增服务端模型接入边界 `ChatGateway`、请求超时与取消处理、请求计数和耗时指标。
 - 新增流式控制器与服务层测试，覆盖正常流、参数校验、遗留高风险字段拒绝和未配置模型降级。
 - 新增 `codelens-ai` 到 `ai-develop` 的迁移计划与归档验收门槛。
+- 新增 Spring AI OpenAI-compatible 模型网关、xtoken 本地安全启动脚本和 DeepSeek 环境变量模板。
+- 新增项目、会话、消息持久化与恢复 API、上下文来源元数据和首 Token/字符指标。
+- 新增受控项目文件读取、代码审查与 Spring 故障诊断 Skills。
+- 新增默认关闭的只读 Streamable HTTP MCP Server。
+- 新增 React + TypeScript 工作台、本地预览脚本、20 条 JSONL 评测集与 Python runner。
+- 新增可查询的 Agent Run 与事件轨迹，记录上下文、模型启动、完成、失败和客户端取消。
+- 新增模型 `native`/`buffered` 传输模式；xtoken 预览默认使用已实测稳定的 buffered SSE 兼容链路。
 
 ### Changed
 

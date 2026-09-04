@@ -11,6 +11,8 @@ import reactor.core.publisher.Flux;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,8 +37,10 @@ class ChatControllerTest {
 
     @Test
     void streamsMetadataTokensAndCompletion() throws Exception {
-        when(service.stream(any(), eq("hello")))
-                .thenReturn(Flux.just("你", "好").delayElements(Duration.ofMillis(10)));
+        UUID conversationId = UUID.randomUUID();
+        when(service.start(any(), any(ChatStreamRequest.class)))
+                .thenReturn(new ChatRun(UUID.randomUUID(), conversationId, "test", "test-model", null, List.of(), false,
+                        Flux.just("你", "好").delayElements(Duration.ofMillis(10))));
 
         MvcResult result = mockMvc.perform(post("/api/chat/stream")
                         .contentType("application/json")
@@ -81,8 +85,8 @@ class ChatControllerTest {
 
     @Test
     void streamsSafeErrorWhenModelIsNotConfigured() throws Exception {
-        when(service.stream(any(), eq("hello")))
-                .thenReturn(Flux.error(new ChatUnavailableException("sensitive internal detail")));
+        when(service.start(any(), any(ChatStreamRequest.class)))
+                .thenThrow(new ChatUnavailableException("sensitive internal detail"));
 
         MvcResult result = mockMvc.perform(post("/api/chat/stream")
                         .contentType("application/json")

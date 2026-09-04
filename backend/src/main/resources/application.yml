@@ -14,6 +14,23 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: true
+  ai:
+    model:
+      embedding: none
+      image: none
+    openai:
+      base-url: ${AI_BASE_URL:http://localhost:11434}
+      api-key: ${AI_API_KEY:local-not-configured}
+      chat:
+        options:
+          model: ${AI_MODEL:deepseek-chat}
+          max-completion-tokens: ${AI_MAX_COMPLETION_TOKENS:4096}
+    mcp:
+      server:
+        enabled: ${MCP_ENABLED:false}
+        name: rainbow-ai-develop
+        version: 0.1.0
+        protocol: STATELESS
 
 server:
   port: ${APP_PORT:8080}
@@ -21,7 +38,16 @@ server:
 
 rainbow:
   ai:
+    workspace:
+      root: ${AI_WORKSPACE_ROOT:..}
+      max-files: ${AI_CONTEXT_MAX_FILES:20}
+      max-file-chars: ${AI_CONTEXT_MAX_FILE_CHARS:3500}
+      max-total-chars: ${AI_CONTEXT_MAX_TOTAL_CHARS:16000}
     chat:
+      enabled: ${AI_ENABLED:false}
+      provider: ${AI_PROVIDER:none}
+      model: ${AI_MODEL:none}
+      stream-mode: ${AI_STREAM_MODE:native}
       sse-timeout: ${AI_SSE_TIMEOUT:2m}
 
 management:

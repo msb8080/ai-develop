@@ -65,23 +65,41 @@ flowchart LR
 flowchart LR
     CLIENT["Web / API Client"] --> CONTROLLER["ChatController"]
     CONTROLLER --> SERVICE["ChatService"]
+    SERVICE --> CONTEXT["ContextAssembler"]
+    CONTEXT --> MEMORY["PostgreSQL 会话窗口"]
+    CONTEXT --> SKILL["按需 Skill"]
+    CONTEXT --> FILES["受控只读工作区"]
     SERVICE --> GATEWAY["ChatGateway"]
     GATEWAY --> PROVIDER["服务端配置的模型提供商"]
 ```
 
-- 客户端请求只接受 `message`；未知字段会被拒绝。
+- 客户端请求接受 `message` 以及服务端生成的 `projectId`、`conversationId`、`skillId`；未知字段会被拒绝。
 - 模型地址、API Key 和系统提示词只能由服务端配置提供，不进入请求体、日志或指标标签。
-- SSE 事件固定为 `metadata`、`token`、`done`、`error`，每次请求生成 `requestId` 以便排障。
+- SSE 事件固定为 `metadata`、`phase`、`token`、`done`、`error`；元数据包含会话、模型、Skill、上下文来源和裁剪状态。
+- 模型网关支持 `native` 与 `buffered` 两种传输。xtoken 本地预览因上游原生流不稳定使用 buffered，再把完整响应按 Unicode code point 安全切片；协议层仍保持一致 SSE。
 - 超时、客户端断开、完成和异常都会释放上游订阅；没有配置模型时以 `AI_NOT_CONFIGURED` 失败关闭。
-- 当前实现是无会话的单轮协议骨架，尚未提供用户鉴权、会话持久化、历史压缩和多租户隔离；这些能力完成前不得作为公网多用户对话服务发布。
+- 项目、会话和消息持久化到 PostgreSQL；上下文使用最近 12 条消息的滑动窗口。摘要压缩、用户鉴权和多租户隔离尚未完成，因此不得作为公网多用户服务发布。
+- 每次请求创建 `agent_runs`，依次记录 `CONTEXT`、`RESPOND` 与终态事件；固定 `iteration=1` 防止无界循环，客户端取消也写入终态。
 
-## 规划中的上下文装配
+## 当前上下文装配
 
-`ContextAssembler` 在每次模型调用前按优先级组装：系统约束、当前目标、项目元数据、按需读取的文件片段、可用工具、会话摘要和 Token 预算。默认不做向量检索；先用目录清单、文件类型、关键词、调用轨迹和 Agent 主动读取获得上下文。
+`ContextAssembler` 在每次模型调用前组装：系统约束、显式流程、按需 Skill、最近会话、受控项目文件与当前请求。默认不做向量检索。工作区读取限制深度、文件数、单文件与总字符数，拒绝绝对路径和越界路径，并跳过 `.env`、密钥、Git、依赖与构建目录。
 
-每轮装配记录来源、字符或 Token 估算、裁剪原因和关联 `requestId`。长内容保留文件位置与摘要，需要时再读取；过期会话状态必须可淘汰或压缩。
+每轮装配通过 SSE 返回来源和裁剪标志，并把模型、Skill 与上下文数量写入消息元数据。后续仍需增加摘要版本、精确 Token 与过期策略。
+
+## 只读 MCP
+
+- `MCP_ENABLED=false` 为默认值，避免无鉴权 HTTP MCP 意外暴露。
+- 本地显式启用后使用 Spring AI Streamable HTTP，并只注册 `listSkills` 与 `readProjectSnapshot`。
+- MCP 文件读取复用同一 `WorkspaceReader`，不存在任意路径、任意 URL、SQL 或命令执行工具。
 
 ## 当前基础接口
 
 - `POST /api/chat/stream`
+- `GET /api/chat/status`
+- `GET|POST /api/projects`
+- `GET /api/conversations`
+- `GET /api/conversations/{id}/messages`
+- `GET /api/skills`
+- `GET /api/runs/{id}`
 - `GET /actuator/health`

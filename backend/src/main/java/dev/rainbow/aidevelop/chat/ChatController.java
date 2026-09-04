@@ -37,16 +37,26 @@ public class ChatController {
         emitter.onTimeout(() -> close(closed, subscription));
         emitter.onError(error -> close(closed, subscription));
 
-        if (!send(emitter, closed, subscription, "metadata", ChatStreamEvent.metadata(requestId))) {
+        ChatRun run;
+        try {
+            run = service.start(requestId, request);
+        } catch (RuntimeException error) {
+            fail(emitter, closed, subscription, requestId, null, error);
             return emitter;
         }
 
-        Disposable disposable = service.stream(requestId, request.message())
+        if (!send(emitter, closed, subscription, "metadata", ChatStreamEvent.metadata(requestId, run))
+                || !send(emitter, closed, subscription, "phase",
+                ChatStreamEvent.phase(requestId, run.conversationId(), "respond"))) {
+            return emitter;
+        }
+
+        Disposable disposable = run.tokens()
                 .subscribe(
                         token -> send(emitter, closed, subscription, "token",
-                                ChatStreamEvent.token(requestId, token)),
-                        error -> fail(emitter, closed, subscription, requestId, error),
-                        () -> complete(emitter, closed, subscription, requestId)
+                                ChatStreamEvent.token(requestId, run.conversationId(), token)),
+                        error -> fail(emitter, closed, subscription, requestId, run.conversationId(), error),
+                        () -> complete(emitter, closed, subscription, requestId, run.conversationId())
                 );
         subscription.set(disposable);
         if (closed.get()) {
@@ -81,12 +91,13 @@ public class ChatController {
             SseEmitter emitter,
             AtomicBoolean closed,
             AtomicReference<Disposable> subscription,
-            UUID requestId
+            UUID requestId,
+            UUID conversationId
     ) {
         if (closed.get()) {
             return;
         }
-        if (send(emitter, closed, subscription, "done", ChatStreamEvent.completed(requestId))
+        if (send(emitter, closed, subscription, "done", ChatStreamEvent.completed(requestId, conversationId))
                 && closed.compareAndSet(false, true)) {
             emitter.complete();
         }
@@ -97,13 +108,15 @@ public class ChatController {
             AtomicBoolean closed,
             AtomicReference<Disposable> subscription,
             UUID requestId,
+            UUID conversationId,
             Throwable error
     ) {
         String code = error instanceof ChatUnavailableException ? "AI_NOT_CONFIGURED" : "AI_STREAM_FAILED";
         String message = error instanceof ChatUnavailableException
                 ? "AI model provider is not configured"
                 : "AI response failed";
-        if (send(emitter, closed, subscription, "error", ChatStreamEvent.failed(requestId, code, message))
+        if (send(emitter, closed, subscription, "error",
+                ChatStreamEvent.failed(requestId, conversationId, code, message))
                 && closed.compareAndSet(false, true)) {
             emitter.complete();
         }
