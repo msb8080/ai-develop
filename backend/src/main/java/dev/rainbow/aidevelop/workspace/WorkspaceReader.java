@@ -41,9 +41,13 @@ public class WorkspaceReader {
         return root.relativize(candidate).toString().isBlank() ? "." : root.relativize(candidate).toString();
     }
 
-    public WorkspaceSnapshot readProject(String reference) {
+    public Path resolveProjectPath(String reference) {
         Path root = workspaceRoot();
-        Path project = root.resolve(validateProjectReference(reference)).normalize();
+        return root.resolve(validateProjectReference(reference)).normalize();
+    }
+
+    public WorkspaceSnapshot readProject(String reference) {
+        Path project = resolveProjectPath(reference);
         List<Path> files;
         try (var stream = Files.walk(project, 12)) {
             files = stream.filter(path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))

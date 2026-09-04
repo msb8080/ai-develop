@@ -17,6 +17,7 @@
 - 新增 React + TypeScript 工作台、本地预览脚本、20 条 JSONL 评测集与 Python runner。
 - 新增可查询的 Agent Run 与事件轨迹，记录上下文、模型启动、完成、失败和客户端取消。
 - 新增模型 `native`/`buffered` 传输模式；xtoken 预览默认使用已实测稳定的 buffered SSE 兼容链路。
+- 新增需要二次批准的本地 Docker 沙盒、白名单 Maven 动作、持久化任务审计和前端执行面板。
 
 ### Changed
 
@@ -26,6 +27,7 @@
 ### Security
 
 - 模型凭据、模型地址和系统提示词改为仅允许服务端配置。
+- 沙盒默认无网络、非 root、只读根和项目挂载，不暴露 Docker Socket、主目录、SSH 或云凭据，并限制 CPU、内存、进程、时间与输出。
 - 旧仓库在历史密钥撤销、功能迁移和 Git 历史保全全部验收前保持独立，不删除、不归档。
 
 ### Removed

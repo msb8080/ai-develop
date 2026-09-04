@@ -58,6 +58,25 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .run-state { padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; }
 .run-state span { color: var(--lime); font: 500 11px 'DM Mono'; text-transform: uppercase; }
 .run-state small { margin-top: 5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sandbox-deck { margin: 18px 6vw 0; max-width: 1050px; padding: 18px; border: 1px solid #332d40; border-radius: 14px; background: linear-gradient(135deg, #17131d, #121210); }
+.sandbox-heading { display: flex; align-items: center; justify-content: space-between; }
+.sandbox-heading .eyebrow { margin-bottom: 5px; }
+.sandbox-heading strong { font: 700 18px 'Syne'; }
+.sandbox-heading > span { padding: 5px 8px; border: 1px solid #573331; border-radius: 99px; color: #d88962; font: 10px 'DM Mono'; }
+.sandbox-heading > span.sandbox-on { border-color: #465731; color: var(--lime); }
+.sandbox-deck > p { margin: 12px 0; color: var(--muted); font-size: 12px; }
+.sandbox-controls { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.sandbox-controls select { min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: #0d0d0c; }
+.sandbox-controls button, .sandbox-actions button { padding: 10px 13px; border: 0; border-radius: 8px; color: #121210; background: var(--lime); font-weight: 700; cursor: pointer; }
+.sandbox-controls button:disabled, .sandbox-actions button:disabled { opacity: .4; cursor: default; }
+.sandbox-job { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.sandbox-job > div:first-child { display: flex; align-items: center; justify-content: space-between; }
+.sandbox-job code, .sandbox-job strong { color: var(--violet); font: 11px 'DM Mono'; }
+.sandbox-actions { display: flex; gap: 8px; margin-top: 10px; }
+.sandbox-actions button:last-child { color: var(--ink); background: #2a2926; }
+.sandbox-output { margin-top: 12px; color: var(--muted); font-size: 12px; }
+.sandbox-output summary { cursor: pointer; }
+.sandbox-job pre { max-height: 220px; margin: 10px 0 0; padding: 12px; overflow: auto; border-radius: 8px; color: #bdb9b0; background: #090908; white-space: pre-wrap; font: 10px/1.5 'DM Mono'; }
 .chat-stage { max-width: 1050px; margin: 28px 6vw 80px; }
 .starter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .starter-grid button { min-height: 145px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: #121210; text-align: left; cursor: pointer; transition: transform .2s, border-color .2s; }
@@ -92,6 +111,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .control-deck { grid-template-columns: 1fr; }
   .control-deck label { border-right: 0; border-bottom: 1px solid var(--line); }
   .starter-grid { grid-template-columns: 1fr; }
+  .sandbox-controls { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

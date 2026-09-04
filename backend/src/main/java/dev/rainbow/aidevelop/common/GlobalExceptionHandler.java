@@ -1,6 +1,7 @@
 package dev.rainbow.aidevelop.common;
 
 import dev.rainbow.aidevelop.chat.ChatUnavailableException;
+import dev.rainbow.aidevelop.sandbox.SandboxBusyException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ChatUnavailableException.class)
     ResponseEntity<ApiError> handleChatUnavailable(ChatUnavailableException exception) {
         return error(HttpStatus.SERVICE_UNAVAILABLE, "AI_NOT_CONFIGURED", exception.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(SandboxBusyException.class)
+    ResponseEntity<ApiError> handleSandboxBusy(SandboxBusyException exception) {
+        return error(HttpStatus.CONFLICT, "SANDBOX_UNAVAILABLE", exception.getMessage(), List.of());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

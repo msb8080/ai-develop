@@ -13,7 +13,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 class SchemaMigrationTest {
 
     @Container
@@ -35,7 +35,7 @@ class SchemaMigrationTest {
 
     @Test
     void createsOnlyTheProjectConversationSchema() {
-        assertThat(tableNames()).contains("projects", "conversations", "messages", "agent_runs", "agent_events");
+        assertThat(tableNames()).contains("projects", "conversations", "messages", "agent_runs", "agent_events", "sandbox_jobs");
         assertThat(tableNames()).doesNotContain("knowledge_bases", "documents");
         assertThat(vectorExtensionCount()).isZero();
         assertThat(columnNames("conversations")).contains("updated_at");

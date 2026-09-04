@@ -1,11 +1,17 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Conversation,
+  approveSandbox,
   createProject,
   getJson,
   Message,
   ModelStatus,
   Project,
+  planSandbox,
+  rejectSandbox,
+  SandboxAction,
+  SandboxJob,
+  SandboxStatus,
   Skill,
   streamChat,
   StreamMetadata,
@@ -31,6 +37,11 @@ export default function App() {
   const [phase, setPhase] = useState('ready')
   const [context, setContext] = useState<StreamMetadata | null>(null)
   const [notice, setNotice] = useState('')
+  const [sandboxStatus, setSandboxStatus] = useState<SandboxStatus | null>(null)
+  const [sandboxActions, setSandboxActions] = useState<SandboxAction[]>([])
+  const [sandboxJobs, setSandboxJobs] = useState<SandboxJob[]>([])
+  const [sandboxAction, setSandboxAction] = useState('backend-test')
+  const [sandboxBusy, setSandboxBusy] = useState(false)
   const [projectForm, setProjectForm] = useState({ name: 'AI Develop', relativePath: '.' })
   const endRef = useRef<HTMLDivElement>(null)
 
@@ -40,16 +51,22 @@ export default function App() {
   )
 
   async function refresh() {
-    const [nextStatus, nextProjects, nextConversations, nextSkills] = await Promise.all([
+    const [nextStatus, nextProjects, nextConversations, nextSkills, nextSandboxStatus, nextSandboxActions, nextSandboxJobs] = await Promise.all([
       getJson<ModelStatus>('/api/chat/status'),
       getJson<Project[]>('/api/projects'),
       getJson<Conversation[]>('/api/conversations'),
       getJson<Skill[]>('/api/skills'),
+      getJson<SandboxStatus>('/api/sandbox/status'),
+      getJson<SandboxAction[]>('/api/sandbox/actions'),
+      getJson<SandboxJob[]>('/api/sandbox/jobs'),
     ])
     setStatus(nextStatus)
     setProjects(nextProjects)
     setConversations(nextConversations)
     setSkills(nextSkills)
+    setSandboxStatus(nextSandboxStatus)
+    setSandboxActions(nextSandboxActions)
+    setSandboxJobs(nextSandboxJobs)
     if (!projectId && nextProjects.length) setProjectId(nextProjects[0].id)
   }
 
@@ -125,6 +142,34 @@ export default function App() {
     }
   }
 
+  async function createSandboxPlan() {
+    if (!projectId) return setNotice('请先选择项目')
+    try {
+      const job = await planSandbox(projectId, sandboxAction)
+      setSandboxJobs((items) => [job, ...items])
+      setNotice('沙盒任务已生成，尚未执行；请核对后批准。')
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : '沙盒任务创建失败')
+    }
+  }
+
+  async function decideSandbox(job: SandboxJob, approved: boolean) {
+    if (approved && !window.confirm('批准后将启动一次无网络、资源受限的临时 Docker 容器。确认执行？')) return
+    setSandboxBusy(true)
+    setNotice(approved ? '沙盒正在执行…' : '')
+    try {
+      const updated = approved ? await approveSandbox(job.id) : await rejectSandbox(job.id)
+      setSandboxJobs((items) => items.map((item) => item.id === updated.id ? updated : item))
+      setNotice(approved ? `沙盒执行${updated.status === 'SUCCEEDED' ? '成功' : '结束'}：${updated.status}` : '沙盒任务已拒绝')
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : '沙盒操作失败')
+    } finally {
+      setSandboxBusy(false)
+    }
+  }
+
+  const latestSandboxJob = sandboxJobs[0]
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -175,7 +220,7 @@ export default function App() {
         <section className="hero">
           <p className="eyebrow violet">JAVA × AI ENGINEERING WORKBENCH</p>
           <h1>从代码证据出发，<br /><em>把问题说清楚。</em></h1>
-          <p className="hero-copy">选择本地项目与分析 Skill。系统只读取受控上下文，保留每轮会话和来源，不执行写操作。</p>
+          <p className="hero-copy">选择本地项目与分析 Skill。分析默认只读；构建与测试只能通过需要二次批准的隔离沙盒执行。</p>
         </section>
 
         <section className="control-deck">
@@ -192,6 +237,37 @@ export default function App() {
             </select>
           </label>
           <div className="run-state"><span>{phase}</span><small>{selectedProject?.name ?? '通用对话'}</small></div>
+        </section>
+
+        <section className="sandbox-deck">
+          <div className="sandbox-heading">
+            <div><p className="eyebrow violet">APPROVAL SANDBOX</p><strong>受控验证</strong></div>
+            <span className={sandboxStatus?.enabled ? 'sandbox-on' : ''}>{sandboxStatus?.enabled ? 'READY' : 'DISABLED'}</span>
+          </div>
+          <p>无网络 · 非 root · 只读项目 · {sandboxStatus?.memory ?? '—'} 内存 · {sandboxStatus?.timeout ?? '—'} 超时</p>
+          <div className="sandbox-controls">
+            <select aria-label="沙盒动作" value={sandboxAction} onChange={(event) => setSandboxAction(event.target.value)}>
+              {sandboxActions.map((action) => <option key={action.id} value={action.id}>{action.name} · {action.description}</option>)}
+            </select>
+            <button disabled={!projectId || sandboxBusy || !sandboxStatus?.enabled} onClick={createSandboxPlan}>生成待批准任务</button>
+          </div>
+          {latestSandboxJob && (
+            <div className="sandbox-job">
+              <div><code>{latestSandboxJob.action}</code><strong>{latestSandboxJob.status}</strong></div>
+              {latestSandboxJob.status === 'PENDING_APPROVAL' && (
+                <div className="sandbox-actions">
+                  <button disabled={sandboxBusy} onClick={() => decideSandbox(latestSandboxJob, true)}>批准并执行</button>
+                  <button disabled={sandboxBusy} onClick={() => decideSandbox(latestSandboxJob, false)}>拒绝</button>
+                </div>
+              )}
+              {(latestSandboxJob.output || latestSandboxJob.error) && (
+                <details className="sandbox-output">
+                  <summary>查看执行输出</summary>
+                  <pre>{latestSandboxJob.output || latestSandboxJob.error}</pre>
+                </details>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="chat-stage">

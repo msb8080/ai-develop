@@ -49,6 +49,16 @@ rainbow:
       model: ${AI_MODEL:none}
       stream-mode: ${AI_STREAM_MODE:native}
       sse-timeout: ${AI_SSE_TIMEOUT:2m}
+    sandbox:
+      enabled: ${SANDBOX_ENABLED:true}
+      docker-binary: ${SANDBOX_DOCKER_BINARY:docker}
+      image: ${SANDBOX_IMAGE:maven:3.9-eclipse-temurin-17}
+      maven-repository: ${SANDBOX_MAVEN_REPOSITORY:}
+      timeout: ${SANDBOX_TIMEOUT:3m}
+      memory: ${SANDBOX_MEMORY:768m}
+      cpus: ${SANDBOX_CPUS:1}
+      pids-limit: ${SANDBOX_PIDS_LIMIT:128}
+      max-output-characters: ${SANDBOX_MAX_OUTPUT_CHARACTERS:12000}
 
 management:
   endpoints:

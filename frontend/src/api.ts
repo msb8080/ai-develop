@@ -31,6 +31,34 @@ export type ModelStatus = {
   streamMode: string
 }
 
+export type SandboxStatus = {
+  enabled: boolean
+  approval: string
+  network: string
+  memory: string
+  cpus: string
+  timeout: string
+}
+
+export type SandboxAction = {
+  id: string
+  name: string
+  description: string
+}
+
+export type SandboxJob = {
+  id: string
+  projectId: string
+  action: string
+  status: string
+  requestedAt: string
+  approvedAt?: string
+  completedAt?: string
+  exitCode?: number
+  output?: string
+  error?: string
+}
+
 export type StreamMetadata = {
   requestId: string
   runId?: string
@@ -63,6 +91,31 @@ export async function createProject(name: string, relativePath: string): Promise
     throw new Error(detail?.message ?? `项目创建失败：${response.status}`)
   }
   return response.json() as Promise<Project>
+}
+
+async function postJson<T>(url: string, body?: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null)
+    throw new Error(detail?.message ?? `请求失败：${response.status}`)
+  }
+  return response.json() as Promise<T>
+}
+
+export function planSandbox(projectId: string, action: string): Promise<SandboxJob> {
+  return postJson('/api/sandbox/jobs', { projectId, action })
+}
+
+export function approveSandbox(id: string): Promise<SandboxJob> {
+  return postJson(`/api/sandbox/jobs/${id}/approve`)
+}
+
+export function rejectSandbox(id: string): Promise<SandboxJob> {
+  return postJson(`/api/sandbox/jobs/${id}/reject`)
 }
 
 export async function streamChat(

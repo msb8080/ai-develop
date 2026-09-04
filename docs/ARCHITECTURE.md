@@ -47,11 +47,12 @@ flowchart LR
 
 ## 沙盒
 
-- 每次任务使用临时容器，结束后销毁。
-- 默认无网络、非 root、只读根文件系统。
-- 项目默认只读挂载；修改写入临时副本并返回 diff。
-- 限制 CPU、内存、进程、磁盘、输出大小和执行时间。
-- 不挂载 Docker Socket、SSH 目录、云凭据或用户主目录。
+- 每次任务先写入 `sandbox_jobs` 并保持 `PENDING_APPROVAL`，只有独立批准接口才能启动临时容器；拒绝、失败、超时与成功都有审计终态。
+- 动作由服务端枚举白名单定义，当前仅允许后端测试和后端打包，不接受客户端命令字符串。
+- 容器无网络、非 root、只读根文件系统，删除全部 Linux capabilities，并启用 `no-new-privileges`。
+- 项目与 Maven 缓存只读挂载；项目后端复制到容器临时文件系统构建，结束后通过 `--rm` 销毁，不回写工作区。
+- 默认限制 1 CPU、768 MB 内存、128 个进程、3 分钟和 12000 字符输出；单实例同时只执行一个任务。
+- 不挂载 Docker Socket、SSH 目录、云凭据或用户主目录。Testcontainers 集成测试在嵌套沙盒中自动跳过，避免突破隔离边界。
 
 ## 协议适配
 
@@ -102,4 +103,8 @@ flowchart LR
 - `GET /api/conversations/{id}/messages`
 - `GET /api/skills`
 - `GET /api/runs/{id}`
+- `GET /api/sandbox/status`
+- `GET /api/sandbox/actions`
+- `GET|POST /api/sandbox/jobs`
+- `POST /api/sandbox/jobs/{id}/approve|reject`
 - `GET /actuator/health`

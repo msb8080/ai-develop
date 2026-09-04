@@ -6,10 +6,10 @@ GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
 
 ## 当前状态
 
-- 当前阶段：阶段 2～4 的本地可运行纵向切片
-- 总体状态：真实模型、会话记忆、受控项目上下文、Skills、只读 MCP、React 工作台与评测基线已落地
+- 当前阶段：阶段 2～5 的本地可运行纵向切片
+- 总体状态：真实模型、会话记忆、受控项目上下文、Skills、只读 MCP、审批沙盒、React 工作台与评测基线已落地
 - 最近更新：2026-09-04
-- 下一项任务：补充工作流 checkpoint、预算限流和本地沙盒；公开部署仍需人工确认
+- 下一项任务：补充工作流恢复、预算限流和多客户端适配；AI 服务公开部署仍需先完成鉴权
 
 ## 资源分工
 
@@ -46,6 +46,8 @@ GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
 
 打开 <http://127.0.0.1:5173/>。脚本会启动 PostgreSQL、Spring Boot 和 Vite，退出时停止应用进程但保留数据库容器。
 
+工作台包含审批沙盒：先创建白名单任务，再单独批准执行。容器无网络、非 root、只读根文件系统，只挂载项目只读副本和 Maven 依赖缓存；实际构建发生在临时文件系统，结束后容器自动删除。该能力默认仅用于本机，公网部署必须设置 `SANDBOX_ENABLED=false`。
+
 DeepSeek 或其他 OpenAI-compatible 服务可通过服务端环境变量接入：`AI_ENABLED`、`AI_PROVIDER`、`AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL`。浏览器请求不接受任何模型凭据。
 
 ## 构建验证
@@ -59,7 +61,7 @@ cd ../frontend && npm install --registry=https://registry.npmjs.org && npm run b
 
 健康检查：`GET http://localhost:8080/actuator/health`。
 
-主要接口：`POST /api/chat/stream`、`GET/POST /api/projects`、`GET /api/conversations`、`GET /api/skills`。流式请求可提交 `message`、服务端项目/会话 ID 与 Skill ID；未知字段会被拒绝。设置 `MCP_ENABLED=true` 后，仅建议在可信本机网络启用只读 Streamable HTTP MCP。
+主要接口：`POST /api/chat/stream`、`GET/POST /api/projects`、`GET /api/conversations`、`GET /api/skills`、`GET/POST /api/sandbox/jobs` 与 `POST /api/sandbox/jobs/{id}/approve|reject`。流式请求可提交 `message`、服务端项目/会话 ID 与 Skill ID；未知字段会被拒绝。设置 `MCP_ENABLED=true` 后，仅建议在可信本机网络启用只读 Streamable HTTP MCP。
 
 评测基线位于 `evaluation/cases.jsonl`，共 20 个 Java/Spring/安全/上下文案例。服务运行后可先执行一条低成本冒烟：
 

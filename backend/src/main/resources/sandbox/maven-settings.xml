@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+    <profiles>
+        <profile>
+            <id>offline-cache</id>
+            <repositories>
+                <repository><id>central</id><url>file:///m2</url></repository>
+                <repository><id>hexin</id><url>file:///m2</url></repository>
+                <repository><id>aliyun-public</id><url>file:///m2</url></repository>
+                <repository><id>aliyunmaven</id><url>file:///m2</url></repository>
+                <repository><id>internal-repository</id><url>file:///m2</url></repository>
+                <repository><id>maven-public</id><url>file:///m2</url></repository>
+                <repository><id>repo2</id><url>file:///m2</url></repository>
+                <repository><id>ibiblio</id><url>file:///m2</url></repository>
+                <repository><id>ui</id><url>file:///m2</url></repository>
+                <repository><id>jboss-public-repository-group</id><url>file:///m2</url></repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository><id>central</id><url>file:///m2</url></pluginRepository>
+                <pluginRepository><id>hexin</id><url>file:///m2</url></pluginRepository>
+                <pluginRepository><id>aliyun-public</id><url>file:///m2</url></pluginRepository>
+                <pluginRepository><id>aliyunmaven</id><url>file:///m2</url></pluginRepository>
+                <pluginRepository><id>internal-repository</id><url>file:///m2</url></pluginRepository>
+                <pluginRepository><id>maven-public</id><url>file:///m2</url></pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+    <activeProfiles><activeProfile>offline-cache</activeProfile></activeProfiles>
+</settings>
