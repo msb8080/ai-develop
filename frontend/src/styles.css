@@ -117,3 +117,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+/* Migrated OmniAgent controls share the existing workbench, not a second app. */
+.migration-tools { margin: 1rem 0; padding: 1rem; border: 1px solid #514668; border-radius: 1rem; }
+.migration-tools p { line-height: 1.65; }
+.migration-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
+.migration-actions button, .migration-actions label { padding: .65rem .85rem; border-radius: .65rem; border: 1px solid #766294; background: #272035; color: #f4edff; font: inherit; }
+.migration-actions input { display: block; max-width: 100%; margin-top: .5rem; }
+.migration-actions label { min-width: 0; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+:focus-visible { outline: 3px solid #c4a0ff; outline-offset: 3px; }

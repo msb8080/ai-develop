@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { demoMode } from './demo'
 import {
   Conversation,
   approveSandbox,
@@ -44,6 +45,28 @@ export default function App() {
   const [sandboxBusy, setSandboxBusy] = useState(false)
   const [projectForm, setProjectForm] = useState({ name: 'AI Develop', relativePath: '.' })
   const endRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+  const conversationLoad = useRef(0)
+  useEffect(() => () => abortRef.current?.abort(), [])
+
+  function download(name: string, text: string, type: string) {
+    const url = URL.createObjectURL(new Blob([text], {type}))
+    const link = document.createElement('a'); link.href = url; link.download = name; link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+  async function importSettings(file?: File) {
+    if (!file) return
+    try {
+      if (file.size > 100_000) throw new Error('配置文件不能超过 100KB')
+      const data: unknown = JSON.parse(await file.text())
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('配置格式不正确')
+      const value = data as Record<string, unknown>
+      const requested = value.skillId ?? value.activeAgentId ?? 'general'
+      if (typeof requested !== 'string' || !skills.some(skill => skill.id === requested)) throw new Error('角色尚未注册，请从列表选择。自定义角色请添加为服务端 Skill。')
+      setSkillId(requested)
+      setNotice('已导入角色偏好。旧模型密钥、服务地址、MCP 命令和自定义系统提示词不会导入；由服务端统一管理。')
+    } catch (error) { setNotice(error instanceof Error ? error.message : '导入失败') }
+  }
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === projectId),
@@ -79,11 +102,17 @@ export default function App() {
   }, [messages])
 
   async function openConversation(id: string) {
+    if (running) return
+    const loadId = ++conversationLoad.current
+    try {
+    const loaded = await getJson<Message[]>(`/api/conversations/${id}/messages`)
+    if (loadId !== conversationLoad.current) return
     setConversationId(id)
     const conversation = conversations.find((item) => item.id === id)
     setProjectId(conversation?.projectId ?? '')
-    setMessages(await getJson<Message[]>(`/api/conversations/${id}/messages`))
+    setMessages(loaded)
     setContext(null)
+    } catch (error) { setNotice(error instanceof Error ? error.message : '会话读取失败') }
   }
 
   async function addProject(event: FormEvent) {
@@ -101,7 +130,10 @@ export default function App() {
   async function submit(event?: FormEvent) {
     event?.preventDefault()
     const message = input.trim()
-    if (!message || running) return
+    if (!message || running || !status.enabled) return
+    const controller = new AbortController()
+    abortRef.current = controller
+    conversationLoad.current++
     setInput('')
     setRunning(true)
     setNotice('')
@@ -131,14 +163,18 @@ export default function App() {
           if (name === 'error') throw new Error(data.message ?? data.code ?? '模型响应失败')
           if (name === 'done') setPhase('done')
         },
+        controller.signal,
       )
       setConversationId(nextConversationId)
       await refresh()
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : '模型响应失败')
-      setPhase('error')
+      setNotice(controller.signal.aborted ? '已停止生成，已收到的内容已保留。' : error instanceof Error ? error.message : '模型响应失败')
+      setPhase(controller.signal.aborted ? 'cancelled' : 'error')
+      // A cancelled run still owns a persisted conversation; keep it reachable.
+      try { setConversations(await getJson<Conversation[]>('/api/conversations')) } catch { /* Keep the original run error visible. */ }
     } finally {
       setRunning(false)
+      abortRef.current = null
     }
   }
 
@@ -175,10 +211,10 @@ export default function App() {
       <aside className="sidebar">
         <a className="brand" href="#top" aria-label="Rainbow AI Dev Copilot">
           <span className="brand-mark">R</span>
-          <span><strong>Rainbow</strong><small>AI DEV COPILOT</small></span>
+          <span><strong>Rainbow</strong><small>AI DEVELOP · OMNIAGENT</small></span>
         </a>
 
-        <button className="new-chat" onClick={() => { setConversationId(''); setMessages([]); setContext(null) }}>
+        <button className="new-chat" disabled={running} onClick={() => { conversationLoad.current++; setConversationId(''); setMessages([]); setContext(null); setNotice(''); setPhase('ready') }}>
           <span>＋</span> 新建分析
         </button>
 
@@ -187,6 +223,7 @@ export default function App() {
           <div className="conversation-list">
             {conversations.map((conversation) => (
               <button key={conversation.id} className={conversation.id === conversationId ? 'active' : ''}
+                disabled={running}
                 onClick={() => openConversation(conversation.id)}>
                 <span>{conversation.title}</span><small>{new Date(conversation.updatedAt).toLocaleDateString()}</small>
               </button>
@@ -202,7 +239,7 @@ export default function App() {
           <div className="path-row">
             <input aria-label="相对路径" value={projectForm.relativePath}
               onChange={(event) => setProjectForm({ ...projectForm, relativePath: event.target.value })} />
-            <button title="接入项目">↗</button>
+            <button title="接入项目" disabled={demoMode || running}>↗</button>
           </div>
           <small>路径只能位于服务端允许的工作区内</small>
         </form>
@@ -214,8 +251,9 @@ export default function App() {
             <span className={`status-dot ${status.enabled ? 'online' : ''}`} />
             {status.enabled ? `${status.provider} / ${status.model} · ${status.streamMode}` : '模型未启用'}
           </div>
-          <a href="https://github.com/msb8080/ai-develop" target="_blank" rel="noreferrer">GitHub ↗</a>
+          <a href="https://msb8080.github.io/">个人主页 ↗</a>
         </header>
+        {demoMode && <div className="notice" role="status">本地离线演示：回答为预设示例，不调用模型、不读取项目、不执行沙盒。刷新后清空数据；请勿输入敏感信息。</div>}
 
         <section className="hero">
           <p className="eyebrow violet">JAVA × AI ENGINEERING WORKBENCH</p>
@@ -231,12 +269,22 @@ export default function App() {
             </select>
           </label>
           <label>按需 Skill
-            <select value={skillId} onChange={(event) => setSkillId(event.target.value)}>
+            <select value={skillId} disabled={running} onChange={(event) => setSkillId(event.target.value)}>
               <option value="">自动识别</option>
               {skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.name}</option>)}
             </select>
           </label>
           <div className="run-state"><span>{phase}</span><small>{selectedProject?.name ?? '通用对话'}</small></div>
+        </section>
+
+        <section className="migration-tools" aria-label="OmniAgent 功能">
+          <p>OmniAgent 已整合进 AI Develop。角色作为服务端 Skill 维护，模型配置与工具权限由服务端管理。</p>
+          <div className="migration-actions">
+            <button type="button" onClick={() => download('ai-develop-settings.json',JSON.stringify({version:1,skillId:skillId || 'general'},null,2),'application/json')}>导出角色偏好</button>
+            <label>导入角色偏好<input type="file" accept=".json,application/json" disabled={running} onChange={event => {void importSettings(event.target.files?.[0]); event.target.value = ''}} /></label>
+            <button type="button" disabled={!messages.length || running} onClick={() => download('ai-develop-conversation.md',messages.map(message=>`## ${message.role === 'user' ? '用户' : '助手'}\n\n${message.content}`).join('\n\n'),'text/markdown')}>导出对话</button>
+          </div>
+          <details><summary>快捷命令与安全规则</summary><p>/explain 解释 · /optimize 优化 · /bug 诊断 · /test 测试 · /refactor 重构 · /doc 文档 · /review 审查。显式选择角色时优先使用所选角色。</p><p>默认中文、结构化输出。只读分析；构建必须单独审批。自定义角色在服务端 skills 目录注册，浏览器不能覆盖系统规则。RAG 不在本项目范围。</p></details>
         </section>
 
         <section className="sandbox-deck">
@@ -299,16 +347,16 @@ export default function App() {
               </div>
             </details>
           )}
-          {notice && <div className="notice">{notice}</div>}
+          {notice && <div className="notice" role="status">{notice}</div>}
 
           <form className="composer" onSubmit={submit}>
             <textarea aria-label="问题" value={input} maxLength={16000}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); submit() }
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit() }
               }}
               placeholder="描述一个 Java / Spring / AI 工程问题…" />
-            <button disabled={running || !input.trim()}>{running ? '分析中' : '发送 ↑'}</button>
+            {running ? <button type="button" onClick={() => abortRef.current?.abort()}>停止生成</button> : <button disabled={!status.enabled || !input.trim()}>发送 ↑</button>}
             <small>Enter 发送 · Shift + Enter 换行 · 服务端持有模型凭据</small>
           </form>
         </section>

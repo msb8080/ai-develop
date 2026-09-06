@@ -6,6 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class SkillRegistryTest {
     private final SkillRegistry registry = new SkillRegistry();
+    @Test
+    void migratedRolesAllLoadAndCommandsRouteBeforeKeywords() {
+        assertThat(registry.list()).hasSize(11);
+        registry.list().forEach(skill -> assertThat(registry.select(skill.id(), "请求").orElseThrow().instructions()).isNotBlank());
+        assertThat(registry.select(null, "/test Spring 服务").orElseThrow().descriptor().id()).isEqualTo("test");
+        assertThat(registry.select(null, "/refactor 服务").orElseThrow().reason()).isEqualTo("command");
+        assertThat(registry.select(null, "/testing")).isEmpty();
+    }
 
     @Test
     void loadsExplicitSkillInstructionsAndVersion() {

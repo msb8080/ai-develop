@@ -1,3 +1,4 @@
+import { demoMode, demoGet, demoStream } from './demo'
 export type Project = {
   id: string
   name: string
@@ -75,12 +76,14 @@ export type StreamMetadata = {
 }
 
 export async function getJson<T>(url: string): Promise<T> {
+  if (demoMode) return demoGet(url) as T
   const response = await fetch(url)
   if (!response.ok) throw new Error(`请求失败：${response.status}`)
   return response.json() as Promise<T>
 }
 
 export async function createProject(name: string, relativePath: string): Promise<Project> {
+  if (demoMode) throw new Error('离线演示不能读取本地项目，请使用本地完整版。')
   const response = await fetch('/api/projects', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -94,6 +97,7 @@ export async function createProject(name: string, relativePath: string): Promise
 }
 
 async function postJson<T>(url: string, body?: unknown): Promise<T> {
+  if (demoMode) throw new Error('演示不执行服务端操作。')
   const response = await fetch(url, {
     method: 'POST',
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -121,20 +125,25 @@ export function rejectSandbox(id: string): Promise<SandboxJob> {
 export async function streamChat(
   input: { message: string; conversationId?: string; projectId?: string; skillId?: string },
   onEvent: (name: string, event: StreamMetadata) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
+  if (demoMode) return demoStream(input, onEvent, signal)
   const response = await fetch('/api/chat/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
+    signal,
   })
   if (!response.ok || !response.body) throw new Error(`对话请求失败：${response.status}`)
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
-  while (true) {
+  let terminal = false
+  try { while (true) {
     const { value, done } = await reader.read()
     buffer += decoder.decode(value ?? new Uint8Array(), { stream: !done })
+    if (done && buffer.trim()) buffer += '\n\n'
     const blocks = buffer.split(/\r?\n\r?\n/)
     buffer = blocks.pop() ?? ''
     for (const block of blocks) {
@@ -144,8 +153,11 @@ export async function streamChat(
         if (line.startsWith('event:')) eventName = line.slice(6).trim()
         if (line.startsWith('data:')) data.push(line.slice(5).trim())
       }
+      if (eventName === 'done' || eventName === 'error') terminal = true
       if (data.length) onEvent(eventName, JSON.parse(data.join('\n')) as StreamMetadata)
     }
     if (done) break
   }
+  if (!terminal) throw new Error('响应提前中断，请重试；已接收的内容仍保留。')
+  } finally { await reader.cancel().catch(() => undefined); reader.releaseLock() }
 }

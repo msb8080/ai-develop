@@ -1,5 +1,11 @@
 # 系统架构
 
+## 2026-09-06 整合
+
+OmniAgent 角色统一进入 SkillRegistry，快捷命令在服务端解析；ContextAssembler 保持最高层边界。前端只发送 message、项目/会话 ID、Skill ID，不发送地址和密钥。旧任意 Agents/Rules 配置改为版本化服务端资源。
+
+新增编译期本地离线演示（VITE_DEMO_MODE=true），API 层返回预设示例与内存会话，不能读真实项目或执行沙盒；源码及产物不公开。普通模式仍连接原有本地后端。
+
 最后更新：2026-09-04
 
 ## 总体架构

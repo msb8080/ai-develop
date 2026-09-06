@@ -1,5 +1,7 @@
 # Rainbow AI Dev Copilot
 
+2026-09-06：已整合 OmniAgent（原 codelens-ai）的 9 个内置角色、快捷命令与角色偏好迁移入口。源码和工作台保持私有；不发布公开演示。原站下线状态见 [迁移记录](docs/migrations/CODELENS_MIGRATION.md)。
+
 面向个人学习和面试展示的 Java + AI 研发助手。项目围绕模型流式对话、上下文工程、Java 项目诊断、Agent Skills、安全工具调用与多编码 Agent 协议兼容逐步建设。
 
 GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
@@ -8,7 +10,8 @@ GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
 
 - 当前阶段：阶段 2～5 的本地可运行纵向切片
 - 总体状态：真实模型、会话记忆、受控项目上下文、Skills、只读 MCP、审批沙盒、React 工作台与评测基线已落地
-- 最近更新：2026-09-04
+- 最近更新：2026-09-06
+- 最近迁移：2026-09-06，服务端 11 个 Skills、停止生成、对话导出、受限角色偏好导入导出，后端 13 项测试通过。
 - 下一项任务：补充工作流恢复、预算限流和多客户端适配；AI 服务公开部署仍需先完成鉴权
 
 ## 资源分工
@@ -34,9 +37,11 @@ GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
 
 ## 目标成果
 
-最终形成一个可在线演示的 Rainbow AI Dev Copilot：接入 Java 项目后，系统能够按需组装项目上下文，完成只读代码分析、故障诊断、受控工具调用、人工审批后的沙盒验证，并比较 Codex、Claude Code、OpenCode 的执行效果。
+最终形成一个私有使用的 Rainbow AI Dev Copilot：接入 Java 项目后，系统能够按需组装项目上下文，完成只读代码分析、故障诊断、受控工具调用、人工审批后的沙盒验证，并比较 Codex、Claude Code、OpenCode 的执行效果。当前只在本机预览，不开放公共演示或 API。
 
 ## 一键本地预览
+
+无模型费用的本地交互预览：`cd frontend && npm run build:demo && npm run preview -- --outDir dist-demo --host 127.0.0.1`。此模式使用预设回答，不读项目、不调用模型、不执行沙盒。构建产物被 Git 忽略，也不会上传个人主页。
 
 本机已配置 xtoken 时，脚本会从现有 OpenCode 配置中临时读取 `xtoken` 的地址和密钥；密钥不会写入项目或日志。当前验证可用模型为 `gpt-5.4`。由于该入口的原生流偶发空响应/超时，脚本默认使用 `buffered` 兼容模式，再由服务端稳定切片为 SSE；其他提供商默认保留 `native` 模式。
 

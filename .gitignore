@@ -13,6 +13,7 @@ target/
 # Node.js
 node_modules/
 dist/
+dist-demo/
 .next/
 coverage/
 *.tsbuildinfo
