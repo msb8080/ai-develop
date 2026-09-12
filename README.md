@@ -1,10 +1,10 @@
 # Rainbow AI Dev Copilot
 
-2026-09-06：已整合 OmniAgent（原 codelens-ai）的 9 个内置角色、快捷命令与角色偏好迁移入口。源码和工作台保持私有；不发布公开演示。原站下线状态见 [迁移记录](docs/migrations/CODELENS_MIGRATION.md)。
+2026-09-12：已整合 OmniAgent（原 codelens-ai）的 9 个内置角色、快捷命令与角色偏好迁移入口。项目现已公开；模型凭据、真实工作区和线上服务仍不公开。原站下线状态见 [迁移记录](docs/migrations/CODELENS_MIGRATION.md)。
 
 面向个人学习和面试展示的 Java + AI 研发助手。项目围绕模型流式对话、上下文工程、Java 项目诊断、Agent Skills、安全工具调用与多编码 Agent 协议兼容逐步建设。
 
-GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
+GitHub：<https://github.com/msb8080/ai-develop>（公开源码；模型 API 与真实工作区不随仓库公开）
 
 ## 当前状态
 
@@ -37,7 +37,7 @@ GitHub：<https://github.com/msb8080/ai-develop>（当前为私有仓库）
 
 ## 目标成果
 
-最终形成一个私有使用的 Rainbow AI Dev Copilot：接入 Java 项目后，系统能够按需组装项目上下文，完成只读代码分析、故障诊断、受控工具调用、人工审批后的沙盒验证，并比较 Codex、Claude Code、OpenCode 的执行效果。当前只在本机预览，不开放公共演示或 API。
+最终形成一个可审阅源码、私有运行数据的 Rainbow AI Dev Copilot：接入 Java 项目后，系统能够按需组装项目上下文，完成只读代码分析、故障诊断、受控工具调用、人工审批后的沙盒验证，并比较 Codex、Claude Code、OpenCode 的执行效果。仓库公开，但不提供带凭据的公共 API。
 
 ## 一键本地预览
 
